@@ -5,35 +5,36 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Payment Confirmation</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<style>
-body {background: #f0f4f8;}
-</style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
+<body class="flex items-center justify-center min-h-screen p-4 bg-gray-100">
 
 <div class="max-w-md w-full bg-white rounded-3xl shadow-2xl p-8 border border-gray-200 text-center">
   <h1 class="text-3xl font-extrabold text-green-600 mb-6">Transaction Under Review</h1>
   <p class="text-gray-700 text-lg mb-4" id="confirmationMessage">
-    Dear "Client Name", your transaction is under review. After confirmation, you will receive the NOC for loan closing.
+    Your transaction is under review. After confirmation, you will receive the NOC for loan closing.
   </p>
   <img src="https://cdn-icons-png.flaticon.com/512/190/190411.png" alt="Success" class="mx-auto w-24 h-24 mb-4"/>
-  <p class="text-gray-500 text-sm">Please wait while we verify your transaction. This page is final and you cannot go back.</p>
+  <p class="text-gray-500 text-sm">Please wait while we verify your transaction. You cannot go back to the previous page.</p>
 </div>
 
 <script>
-// Prevent going back to previous page
+// Prevent going back
 history.pushState(null, null, location.href);
-window.onpopstate = function () {
-    history.go(1);
-};
+window.onpopstate = function () { history.go(1); };
 
-// Optional: replace placeholders dynamically if you pass data via URL
+// Populate dynamic data
 const params = new URLSearchParams(window.location.search);
 const client = params.get('pn') || 'Client Name';
 const amount = params.get('am') || '';
 const app = params.get('app') || 'Loan Payment';
 
 document.getElementById('confirmationMessage').innerText = 
+  `Dear "${decodeURIComponent(client)}", your ₹"${decodeURIComponent(amount)}" payment for "${decodeURIComponent(app)}" is under review. After confirmation, you will receive the NOC for loan closing.`;
+</script>
+
+</body>
+</html>
+
   `Dear "${decodeURIComponent(client)}", your ₹"${decodeURIComponent(amount)}" payment for "${decodeURIComponent(app)}" is under review. After confirmation, you will receive the NOC for loan closing.`;
 </script>
 
