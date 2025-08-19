@@ -6,37 +6,47 @@
 <title>Payment Confirmation</title>
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4 bg-gray-100">
+<body class="bg-gradient-to-r from-green-50 to-indigo-50 min-h-screen flex items-center justify-center p-4">
 
 <div id="confirmationContainer" class="max-w-md w-full bg-white rounded-3xl shadow-2xl p-8 border border-gray-200 text-center">
-  <h1 class="text-3xl font-extrabold text-green-600 mb-6">Transaction Under Review</h1>
-  <p class="text-gray-700 text-lg mb-4" id="confirmationMessage"></p>
-  <img src="https://cdn-icons-png.flaticon.com/512/190/190411.png" alt="Success" class="mx-auto w-24 h-24 mb-4"/>
-  <p id="expiredMessage" class="text-red-600 hidden">Payment session expired.</p>
+  <h1 class="text-3xl font-bold text-green-600 mb-4">Payment Under Review</h1>
+  <p id="confirmationMessage" class="text-gray-700 text-left mb-4"></p>
+  <p id="timeLeft" class="text-red-600 font-semibold"></p>
+</div>
+
+<div id="expiredContainer" class="hidden w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 border border-gray-200 text-center">
+  <h1 class="text-3xl font-bold text-red-600 mb-4">Page Expired</h1>
+  <p class="text-gray-700">The confirmation session has expired.</p>
 </div>
 
 <script>
-// Prevent back navigation
-history.pushState(null, null, location.href);
-window.onpopstate = function () { history.go(1); };
-
 const params = new URLSearchParams(window.location.search);
-const client = params.get('pn') || 'Client Name';
-const amount = params.get('am') || '';
-const app = params.get('app') || 'Loan Payment';
-const expiryParam = params.get('expiry') || (Date.now() + 9*60*1000);
+const app = params.get('app') || 'Payment';
+const client = params.get('pn') || 'Customer';
+const amount = params.get('am') || '0';
+const expiryParam = params.get('expiry');
+const expiryTime = expiryParam ? parseInt(expiryParam) : Date.now() + 9*60*1000;
 
-const msg = `Dear "${decodeURIComponent(client)}", your ₹"${decodeURIComponent(amount)}" payment for "${decodeURIComponent(app)}" is under review. After confirmation, you will receive the NOC for loan closing.`;
-document.getElementById('confirmationMessage').innerText = msg;
+document.getElementById('confirmationMessage').innerText = 
+`Dear "${decodeURIComponent(client)}" Sir/Mam,\n\nYour ₹"${decodeURIComponent(amount)}" payment for "${decodeURIComponent(app)}" is under review.\nAfter confirmation, you will receive the NOC for loan closing.`;
 
-const expiryTime = parseInt(expiryParam);
-const countdown = setInterval(() => {
-  if (Date.now() >= expiryTime) {
+const countdown = setInterval(()=>{
+  const remaining = Math.floor((expiryTime - Date.now())/1000);
+  if(remaining<=0){
     clearInterval(countdown);
-    document.getElementById('confirmationMessage').classList.add('hidden');
-    document.getElementById('expiredMessage').classList.remove('hidden');
+    document.getElementById('confirmationContainer').classList.add('hidden');
+    document.getElementById('expiredContainer').classList.remove('hidden');
+  } else {
+    const min = Math.floor(remaining/60);
+    const sec = remaining%60;
+    document.getElementById('timeLeft').textContent = `Time Left: ${min.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
   }
-}, 1000);
+},1000);
+
+// Prevent back to pay.html
+if(localStorage.getItem('submitted') !== 'true'){
+  window.location.href = 'https://loan-payment.vercel.app/';
+}
 </script>
 </body>
 </html>
