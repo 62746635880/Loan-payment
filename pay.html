@@ -48,16 +48,16 @@ button:disabled, a:disabled { opacity:0.5; cursor:not-allowed; pointer-events:no
   <!-- UTR Input -->
   <div class="mt-6">
     <label for="utr" class="block text-gray-700 font-semibold mb-2">Enter UTR / Transaction ID</label>
-    <input id="utr" type="text" placeholder="12-digit UTR" class="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3"/>
+    <input id="utr" type="text" placeholder="e.g. 123456789012" class="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3"/>
     <button id="submitUTRBtn" onclick="submitUTR()" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3 rounded-2xl shadow transition">Submit UTR</button>
   </div>
 
-  <p class="text-gray-500 text-sm text-center mt-4">Scan QR or use any app above to complete payment</p>
+  <p class="text-gray-500 text-sm text-center mt-4">Scan the QR code, copy the UPI ID, or use any app button above to complete payment</p>
 </div>
 
 <div id="expiredContainer" class="hidden w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 border border-gray-200 text-center">
   <h1 class="text-3xl font-bold text-red-600 mb-4">Page Expired</h1>
-  <p class="text-gray-700">Your payment session has timed out. Please generate a new link.</p>
+  <p class="text-gray-700">Your payment session has timed out. Please generate a new link to complete the transaction.</p>
 </div>
 
 <script>
@@ -74,39 +74,47 @@ document.getElementById('clientName').innerText = decodeURIComponent(client);
 document.getElementById('amount').innerText = `₹${decodeURIComponent(amount)}`;
 document.getElementById('upiId').value = decodeURIComponent(upi);
 
-if(qr){ document.getElementById('qrImage').src = decodeURIComponent(qr); }
+if (qr) { document.getElementById('qrImage').src = decodeURIComponent(qr); }
 else { document.getElementById('qrImage').style.display = 'none'; }
 
+const upiLink = `upi://pay?pa=${encodeURIComponent(upi)}&pn=${encodeURIComponent(client)}&am=${encodeURIComponent(amount)}&cu=INR`;
 ['gpayBtn','phonepeBtn','paytmBtn','bhimBtn'].forEach(id => {
-  document.getElementById(id).href = `upi://pay?pa=${encodeURIComponent(upi)}&pn=${encodeURIComponent(client)}&am=${encodeURIComponent(amount)}&cu=INR`;
+  document.getElementById(id).href = upiLink;
 });
 
-function copyUPI(){ navigator.clipboard.writeText(upi); alert("UPI ID copied!"); }
+function copyUPI() { navigator.clipboard.writeText(upi); alert("UPI ID copied!"); }
 
-function submitUTR(){
+function submitUTR() {
   const utr = document.getElementById('utr').value.trim();
-  if(!/^\d{12,}$/.test(utr)){ alert("UTR must be at least 12 digits."); return; }
-  localStorage.setItem('submitted', 'true'); // Mark as submitted
-  window.location.href = `https://loan-payment.vercel.app/confirmation.html?pn=${encodeURIComponent(client)}&am=${encodeURIComponent(amount)}&app=${encodeURIComponent(app)}&expiry=${expiryParam}`;
+  if (!utr) { alert("Please enter the UTR / Transaction ID."); return; }
+  if (!/^\d{12}$/.test(utr)) { alert("UTR must be 12 digits long."); return; }
+
+  // redirect to confirmation page with params and remaining expiry
+  const remainingExpiry = parseInt(expiryParam) - Date.now();
+  window.location.href = `confirmation.html?app=${encodeURIComponent(app)}&pn=${encodeURIComponent(client)}&am=${encodeURIComponent(amount)}&expiry=${Date.now()+remainingExpiry}`;
 }
 
-// Countdown Timer
+// Countdown timer with disable on expiry
 const timerElement = document.getElementById('timer');
-const expiryTime = expiryParam ? parseInt(expiryParam) : Date.now()+9*60*1000;
+const expiryTime = expiryParam ? parseInt(expiryParam) : Date.now() + 9*60*1000;
 
-const countdown = setInterval(()=>{
-  const remaining = Math.floor((expiryTime - Date.now())/1000);
-  if(remaining<=0){
+const countdown = setInterval(() => {
+  const now = Date.now();
+  let remaining = Math.floor((expiryTime - now)/1000);
+  if (remaining <= 0) {
     clearInterval(countdown);
     document.getElementById('paymentContainer').classList.add('hidden');
     document.getElementById('expiredContainer').classList.remove('hidden');
-  } else {
-    const min = Math.floor(remaining/60);
-    const sec = remaining%60;
-    timerElement.textContent = `${min.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
+    ['gpayBtn','phonepeBtn','paytmBtn','bhimBtn','submitUTRBtn'].forEach(id => {
+      document.getElementById(id).disabled = true;
+    });
+    document.getElementById('utr').disabled = true;
+    return;
   }
-},1000);
+  const minutes = Math.floor(remaining/60);
+  const seconds = remaining % 60;
+  timerElement.textContent = `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+}, 1000);
 </script>
 </body>
 </html>
- 
