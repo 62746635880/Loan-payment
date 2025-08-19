@@ -8,29 +8,35 @@
 </head>
 <body class="flex items-center justify-center min-h-screen p-4 bg-gray-100">
 
-<div class="max-w-md w-full bg-white rounded-3xl shadow-2xl p-8 border border-gray-200 text-center">
+<div id="confirmationContainer" class="max-w-md w-full bg-white rounded-3xl shadow-2xl p-8 border border-gray-200 text-center">
   <h1 class="text-3xl font-extrabold text-green-600 mb-6">Transaction Under Review</h1>
-  <p class="text-gray-700 text-lg mb-4" id="confirmationMessage">
-    Your transaction is under review. After confirmation, you will receive the NOC for loan closing.
-  </p>
+  <p class="text-gray-700 text-lg mb-4" id="confirmationMessage"></p>
   <img src="https://cdn-icons-png.flaticon.com/512/190/190411.png" alt="Success" class="mx-auto w-24 h-24 mb-4"/>
-  <p class="text-gray-500 text-sm">Please wait while we verify your transaction. You cannot go back to the previous page.</p>
+  <p id="expiredMessage" class="text-red-600 hidden">Payment session expired.</p>
 </div>
 
 <script>
-// Prevent going back
+// Prevent back navigation
 history.pushState(null, null, location.href);
 window.onpopstate = function () { history.go(1); };
 
-// Populate dynamic data
 const params = new URLSearchParams(window.location.search);
 const client = params.get('pn') || 'Client Name';
 const amount = params.get('am') || '';
 const app = params.get('app') || 'Loan Payment';
+const expiryParam = params.get('expiry') || (Date.now() + 9*60*1000);
 
-document.getElementById('confirmationMessage').innerText = 
-  `Dear "${decodeURIComponent(client)}", your ₹"${decodeURIComponent(amount)}" payment for "${decodeURIComponent(app)}" is under review. After confirmation, you will receive the NOC for loan closing.`;
+const msg = `Dear "${decodeURIComponent(client)}", your ₹"${decodeURIComponent(amount)}" payment for "${decodeURIComponent(app)}" is under review. After confirmation, you will receive the NOC for loan closing.`;
+document.getElementById('confirmationMessage').innerText = msg;
+
+const expiryTime = parseInt(expiryParam);
+const countdown = setInterval(() => {
+  if (Date.now() >= expiryTime) {
+    clearInterval(countdown);
+    document.getElementById('confirmationMessage').classList.add('hidden');
+    document.getElementById('expiredMessage').classList.remove('hidden');
+  }
+}, 1000);
 </script>
-
 </body>
 </html>
