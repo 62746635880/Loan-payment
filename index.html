@@ -59,10 +59,10 @@
   </button>
 
   <!-- Output -->
-  <div id="output" class="hidden p-4 bg-indigo-50 rounded-xl border border-indigo-200">
+  <div id="output" class="hidden p-4 bg-indigo-50 rounded-xl border border-indigo-200 break-words">
     <p class="text-gray-700 font-medium mb-2">Generated Link:</p>
     <a id="paymentLink" href="#" target="_blank" 
-       class="break-all text-indigo-700 underline hover:text-indigo-900 font-semibold"></a>
+       class="text-indigo-700 underline hover:text-indigo-900 font-semibold break-all"></a>
   </div>
 </div>
 
@@ -72,7 +72,7 @@ const qrPreview = document.getElementById('qrPreview');
 
 qrInput.addEventListener('change', () => {
   const file = qrInput.files[0];
-  if (file) {
+  if(file){
     const reader = new FileReader();
     reader.onload = e => {
       qrPreview.src = e.target.result;
@@ -91,30 +91,24 @@ function generateLink() {
   const amount = document.getElementById('amount').value.trim();
   const app = document.getElementById('appName').value.trim() || "Payment";
 
-  if (!upiId || !name || !amount) {
-    alert("Please fill all fields.");
-    return;
-  }
+  if(!upiId || !name || !amount){ alert("Please fill all fields."); return; }
 
   const qrFile = document.getElementById('qrFile').files[0];
-  if (qrFile) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const qrData = encodeURIComponent(e.target.result);
-      createLink(qrData);
-    };
-    reader.readAsDataURL(qrFile);
-  } else {
-    createLink("");
-  }
 
-  function createLink(qrData) {
-    const expiryTime = Date.now() + 9*60*1000; // 9 minutes countdown
-    const link = `pay.html?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(name)}&am=${encodeURIComponent(amount)}&app=${encodeURIComponent(app)}&qr=${qrData}&expiry=${expiryTime}`;
+  function createLink(qrData = "") {
+    const expiryTime = Date.now() + 9*60*1000; // 9 minutes
+    const link = `https://loan-payment.vercel.app/pay.html?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(name)}&am=${encodeURIComponent(amount)}&app=${encodeURIComponent(app)}&qr=${encodeURIComponent(qrData)}&expiry=${expiryTime}`;
+    
     document.getElementById('paymentLink').href = link;
     document.getElementById('paymentLink').innerText = link;
     document.getElementById('output').classList.remove('hidden');
   }
+
+  if(qrFile){
+    const reader = new FileReader();
+    reader.onload = e => createLink(e.target.result);
+    reader.readAsDataURL(qrFile);
+  } else { createLink(); }
 }
 </script>
 </body>
